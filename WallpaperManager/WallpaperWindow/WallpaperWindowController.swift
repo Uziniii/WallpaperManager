@@ -10,6 +10,7 @@ import Foundation
 
 class WallpaperWindowController {
     private var panel: NSPanel?
+    private var contentView: WallpaperWindowView?
     
     func open() {
         let panel = NSPanel(
@@ -20,9 +21,11 @@ class WallpaperWindowController {
             screen: .main
         )
         
+        self.contentView = WallpaperWindowView()
+        
         panel.level = .screenSaver
         panel.contentView = NSHostingView(
-            rootView: WallpaperWindowView()
+            rootView: contentView
         )
 
         let screen = NSScreen.main?.frame.size
@@ -49,7 +52,23 @@ class WallpaperWindowController {
     }
     
     func close() {
-        self.panel?.close()
-        self.panel = nil
+        if let view = self.contentView {
+            try! NSWorkspace.shared.setDesktopImageURL(
+                URL.init(filePath: view.wallpaperDir + view.images[view.selectedWallpaper.number].id),
+                for: NSScreen.main!
+            )
+
+            self.panel?.close()
+            self.panel = nil
+            self.contentView = nil
+        }
+    }
+    
+    func nextWallpaper() {
+        self.contentView?.nextWallpaper()
+    }
+    
+    func previousWallpaper() {
+        self.contentView?.previousWallpaper()
     }
 }

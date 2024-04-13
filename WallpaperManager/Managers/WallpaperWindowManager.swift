@@ -8,6 +8,9 @@
 import Foundation
 import SwiftUI
 
+let CommandModifiers = CGKeyCode(55)
+let ShiftModifiers = CGKeyCode(56)
+
 class WallpaperWindowManager: ObservableObject {
     private var currentlyPressedModifiers: Set<CGKeyCode> = []
     private var flagsChangedEventMonitor: EventMonitor?
@@ -34,11 +37,23 @@ class WallpaperWindowManager: ObservableObject {
     
     func handleWallpaperKeypress(_ event: NSEvent) {
         if event.keyCode == 14 {
-            if !panelIsOpen {
-                self.wallpaperWindowController.open()
+            if self.panelIsOpen {
+                if self.currentlyPressedModifiers.contains(ShiftModifiers) {
+                    self.wallpaperWindowController.previousWallpaper()
+                } else {
+                    self.wallpaperWindowController.nextWallpaper()
+                }
+                
+                return
             }
             
-            self.panelIsOpen = true
+            if !self.panelIsOpen &&
+                self.currentlyPressedModifiers.contains(CommandModifiers) &&
+                self.currentlyPressedModifiers.contains(ShiftModifiers)
+            {
+                self.wallpaperWindowController.open()
+                self.panelIsOpen = true
+            }
         }
     }
     
@@ -51,6 +66,9 @@ class WallpaperWindowManager: ObservableObject {
             self.currentlyPressedModifiers.insert(event.keyCode)
         }
 
-        print("Current modifiers: \(currentlyPressedModifiers)")
+        if self.panelIsOpen && !self.currentlyPressedModifiers.contains(CommandModifiers) {
+            self.wallpaperWindowController.close()
+            self.panelIsOpen = false
+        }
     }
 }
